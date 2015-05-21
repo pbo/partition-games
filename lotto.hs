@@ -36,21 +36,23 @@ tommyLotto (Partition xs) (Partition ys) =
 force :: Partition -> Partition -> Int
 force (Partition xs) (Partition ys) = sum [signum (x - y) | x <- xs, y <- ys]
 
-eigenforce :: Partition -> Int
-eigenforce (Partition xs) = sum [heaviside (x - y) | x <- xs, y <- xs]
-  where  heaviside n | n <= 0 = 0
-                     | otherwise = 1
---eigenforce' (Partition xs) = sum [1 | x <- xs, y <- xs, x == y]
+resource :: Partition -> Partition -> Int
+resource (Partition xs) (Partition ys) = sum [heaviside (x - y) | x <- xs, y <- ys]
+  where  heaviside x | x > 0 = 1
+                     | otherwise = 0
 
-maxEigenforce :: Int -> Int
-maxEigenforce n = n * (n - 1) `div` 2
+eigenResource :: Partition -> Int
+eigenResource xs = resource xs xs
+
+maxEigenResource :: Int -> Int
+maxEigenResource m = m * (m - 1) `div` 2
 
 balance :: Partition -> Double
-balance (Partition xs) = - fromIntegral sigma / fromIntegral b
-  where sigma = sum $ zipWith (*) [n_2,(n_2-1)..1] diffs
-        diffs = zipWith (-) (take n_2 xs) (reverse xs)
-        n_2 = length xs `div` 2
-        b = sum xs
+balance (Partition xs) = - fromIntegral sigma / fromIntegral n
+  where sigma = sum $ zipWith (*) [m_2, (m_2-1) .. 1] diffs
+        diffs = zipWith (-) (take m_2 xs) (reverse xs)
+        m_2 = length xs `div` 2
+        n = sum xs
 
 {--------------------------------------------------------------------
   Interaction
@@ -62,5 +64,5 @@ interactionMatrix (Partition xs) (Partition ys) = [signum (x - y) | x <- xs, y <
 classVSClass :: [Partition] -> [Partition] -> [Float]
 classVSClass cx cy = [rel (sum [lotto px py | py <- cy]) | px <- cx]
 	where lotto px py = if sum (interactionMatrix px py) < 0 then 0::Int else 1::Int
-	      rel a = fromIntegral a / n
-	      n = fromIntegral $ length cy
+	      rel a = fromIntegral a / m
+	      m = fromIntegral $ length cy
