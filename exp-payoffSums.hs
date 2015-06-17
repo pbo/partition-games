@@ -23,7 +23,6 @@ signumPayoffSums :: [Partition] -> [Int]
 signumPayoffSums ps = map (signumPayoffSum ps) ps
 
 main :: IO ()
--- main = print $ payoffSums n m
 main = saveCSV filename ["payoffSum"] $ map Only (signumPayoffSums ps)
   where
     filename = "output/payoff-sums-n=" ++ show n ++ "-m=" ++ show m ++ ".csv"
