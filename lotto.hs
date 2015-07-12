@@ -33,16 +33,38 @@ tommyLotto (Partition xs) (Partition ys) =
   Metrics
 -------------------------------------------------------------------------------}
 
+heaviside :: (Ord a, Num a1, Num a) => a -> a1
+heaviside x | x > 0 = 1
+            | otherwise = 0
+
 force :: Partition -> Partition -> Int
 force (Partition xs) (Partition ys) = sum [signum (x - y) | x <- xs, y <- ys]
 
+force' :: Num a => [a] -> [a] -> a
+force' xs ys = sum [signum (x - y) | x <- xs, y <- ys]
+
 resource :: Partition -> Partition -> Int
-resource (Partition xs) (Partition ys) = sum [heaviside (x - y) | x <- xs, y <- ys]
-  where  heaviside x | x > 0 = 1
-                     | otherwise = 0
+resource (Partition xs) (Partition ys) = resource' xs ys
+
+resource' :: (Ord a1, Num a1, Num a) => [a1] -> [a1] -> a
+resource' xs ys = sum [heaviside (x - y) | x <- xs, y <- ys]
+
+resourceVec :: Num t => Partition -> Partition -> [t]
+resourceVec (Partition xs) (Partition ys) = resourceVec' xs ys
+
+resourceVec' :: (Ord a, Num a, Num t) => [a] -> [a] -> [t]
+resourceVec' xs ys = [sum [heaviside (x - y) | y <- ys] | x <- xs]
 
 eigenResource :: Partition -> Int
 eigenResource xs = resource xs xs
+
+eigenResource' :: (Ord a, Floating a, Fractional a, Num a) => Partition -> a
+eigenResource' (Partition xs) = resource'' (map fromIntegral xs) avgPartition
+  where
+    n = sum xs
+    m = length xs
+    avgPartition = map (\i -> (fromIntegral n / fromIntegral m) * log (fromIntegral m / fromIntegral i)) [1, 2 .. m]
+    resource'' as bs = sum [max 0 (x - y) | x <- as, y <- bs]
 
 maxEigenResource :: Int -> Int
 maxEigenResource m = m * (m - 1) `div` 2
