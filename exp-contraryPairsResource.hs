@@ -7,31 +7,35 @@ import Control.Monad
 uniquePairs :: [t] -> S.Set (t, t)
 uniquePairs xs = S.fromDistinctAscList [(x,y) | (x:xt) <- tails xs, y <- xt]
 
+resourceMatrix :: Partition -> Partition -> [([Int], [Int])]
+resourceMatrix (Partition xs) (Partition ys) =
+    if xs == xs' && ys == ys'
+        then []
+        else (xs', ys') : resourceMatrix (Partition xs') (Partition ys')
+    where xs'  = resourceVec' xs ys
+          ys'  = resourceVec' ys xs
+
+resourceMatrixResult :: (Num a, Eq a) => [([a], [a])] -> a
+resourceMatrixResult [] = 0
+resourceMatrixResult ((xs, ys) : restM) =
+    if result /= 0
+        then result
+        else resourceMatrixResult restM
+    where result = signum (sum xs - sum ys)
+
 main :: IO ()
 main = do
-    let (n, m) = (16, 4)
+    let (n, m) = (15, 5)
         xs = allLottoPartitions n m
     _ <- forM (S.toList (uniquePairs xs)) (\(x, y) -> do
         let (l, t, w) = tommyLotto x y
             isContrary = signum (force x y) /= signum (w - l)
         when isContrary $ do
+            let rm = resourceMatrix x y
+                isContrary' = signum (w - l) /= resourceMatrixResult rm
+            putStrLn (if isContrary' then "!" else [])
             putStrLn $ show (fromPartition x) ++ " vs " ++ show (fromPartition y) ++ ":"
             putStrLn $ "\tWins: " ++ show w ++ ", Ties: " ++ show t ++ ", Losses: " ++ show l
-            let r1 = resourceVec x y
-                r2 = resourceVec y x
-            putStrLn $ "\tR:    " ++ show r1 ++ " = " ++ show (sum r1) ++ " vs "
-                                  ++ show r2 ++ " = " ++ show (sum r2)
-            let r1' = resourceVec' r1 r2
-                r2' = resourceVec' r2 r1
-            putStrLn $ "\tR':   " ++ show r1' ++ " = " ++ show (sum r1') ++ " vs "
-                                  ++ show r2' ++ " = " ++ show (sum r2')
-            let r1'' = resourceVec' r1' r2'
-                r2'' = resourceVec' r2' r1'
-            putStrLn $ "\tR'':  " ++ show r1'' ++ " = " ++ show (sum r1'') ++ " vs "
-                                  ++ show r2'' ++ " = " ++ show (sum r2'')
-            let r1''' = resourceVec' r1'' r2''
-                r2''' = resourceVec' r2'' r1''
-            putStrLn $ "\tR''': " ++ show r1''' ++ " = " ++ show (sum r1''') ++ " vs "
-                                  ++ show r2''' ++ " = " ++ show (sum r2''')
+            _ <- forM rm (\(x', y') -> putStrLn $ "\t" ++ show x' ++ " = " ++ show (sum x') ++ " vs " ++ show y' ++ " = " ++ show (sum y'))
             putStrLn "")
     putStrLn ""
