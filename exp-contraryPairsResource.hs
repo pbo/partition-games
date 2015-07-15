@@ -18,10 +18,9 @@ resourceMatrix (Partition xs) (Partition ys) =
 resourceMatrixResult :: (Num a, Eq a) => [([a], [a])] -> a
 resourceMatrixResult [] = 0
 resourceMatrixResult ((xs, ys) : restM) =
-    if result /= 0
-        then result
-        else resourceMatrixResult restM
-    where result = signum (sum xs - sum ys)
+    let s = signum (sum xs - sum ys) in
+        case s of 0 -> resourceMatrixResult restM
+                  _ -> s
 
 main :: IO ()
 main = do
