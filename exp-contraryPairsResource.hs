@@ -9,11 +9,10 @@ uniquePairs xs = S.fromDistinctAscList [(x,y) | (x:xt) <- tails xs, y <- xt]
 
 resourceMatrix :: Partition -> Partition -> [([Int], [Int])]
 resourceMatrix (Partition xs) (Partition ys) =
-    if xs == xs' && ys == ys'
-        then []
-        else (xs', ys') : resourceMatrix (Partition xs') (Partition ys')
-    where xs'  = resourceVec' xs ys
-          ys'  = resourceVec' ys xs
+    let (xs', ys') = (resourceVec' xs ys, resourceVec' ys xs) in
+        if xs /= xs' || ys /= ys'
+            then (xs', ys') : resourceMatrix (Partition xs') (Partition ys')
+            else []
 
 resourceMatrixResult :: (Num a, Eq a) => [([a], [a])] -> a
 resourceMatrixResult [] = 0
