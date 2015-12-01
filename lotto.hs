@@ -14,10 +14,35 @@ allLottoPartitions n m = map padZeros (partitions' (n, m) n)
 countLottoPartitions :: Int -> Int -> Integer
 countLottoPartitions n m = countPartitions' (n, m) n
 
+uniform' :: Int -> Int -> [Int]
+uniform' n m = zipWith (+) (replicate m q) (replicate r 1 ++ repeat 0)
+  where (q, r) = n `quotRem` m
+
+uniform :: Int -> Int -> Partition
+uniform n m = toPartition (uniform' n m)
+
 -- Returns the result of Blotto game of the first partition against the second
 -- partition.
 blotto :: (Num a) => [a] -> [a] -> a
 blotto xs ys = signum $ sum $ zipWith (\x y -> signum (x - y)) xs ys
+
+hB :: (Integral a1, Fractional a) => [a1] -> [a1] -> a
+hB xs ys = fromIntegral (sum (zipWith (\x y -> signum (x - y)) xs ys)) / fromIntegral m
+  where m = length xs
+
+hL :: Fractional a => Partition -> Partition -> a
+hL (Partition xs) (Partition ys) = fromIntegral (sum [signum (x - y) | x <- xs, y <- ys]) / fromIntegral (m * m)
+  where m = length xs
+
+hL' :: Fractional a => Partition -> Partition -> a
+hL' (Partition xs) (Partition ys) = sum (map (hB xs) theta) / fromIntegral n
+  where theta = permutations ys
+        n = length theta
+
+hL'' :: Fractional a => Partition -> Partition -> a
+hL'' (Partition xs) (Partition ys) = sum (map (signum . hB xs) theta) / fromIntegral n
+  where theta = permutations ys
+        n = length theta
 
 -- Returns number of losses, ties and wins in exhaustive Tommy-Lotto game of the
 -- first partition against all permutations of the second partition.
@@ -76,6 +101,15 @@ balance (Partition xs) = - fromIntegral sigma / fromIntegral n
         m_2 = length xs `div` 2
         n = sum xs
 
+distance :: Partition -> Partition -> Int
+distance (Partition xs) (Partition ys) = sum (map abs (zipWith (-) xs ys)) `div` 2
+
+distanceMax :: Partition -> Partition -> Int
+distanceMax (Partition xs) (Partition ys) = maximum (map abs (zipWith (-) xs ys))
+
+diameter :: (Applicative t, Foldable t) => t Partition -> Int
+diameter ps = maximum $ distance <$> ps <*> ps
+
 {--------------------------------------------------------------------
   Interaction
 --------------------------------------------------------------------}
@@ -85,6 +119,6 @@ interactionMatrix (Partition xs) (Partition ys) = [signum (x - y) | x <- xs, y <
 
 classVSClass :: [Partition] -> [Partition] -> [Float]
 classVSClass cx cy = [rel (sum [lotto px py | py <- cy]) | px <- cx]
-	where lotto px py = if sum (interactionMatrix px py) < 0 then 0::Int else 1::Int
-	      rel a = fromIntegral a / m
-	      m = fromIntegral $ length cy
+  where lotto px py = if sum (interactionMatrix px py) < 0 then 0::Int else 1::Int
+        rel a = fromIntegral a / m
+        m = fromIntegral $ length cy

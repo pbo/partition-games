@@ -26,6 +26,7 @@ import Data.Colour (opaque)
 import Data.Colour.Names (gray)
 import Graphics.Rendering.Chart.Backend.Cairo
 
+
 intro :: String
 intro = "+------------------------------------------+\n" ++
         "| EVOLUTIONARY DYNAMICS OF PARTITION GAMES |\n" ++
@@ -146,7 +147,7 @@ strengthen :: [Int] -> Partition -> Partition
 strengthen rv (Partition a) = toPartitionUnsafe $ zipWith (+) a rv
 
 proportionaly :: [Int] -> Int -> [Int]
-proportionaly ms n = roundToSum n $ map (* fromIntegral n) (normalize ms)
+proportionaly ms n = roundToSum n $ map (* fromIntegral n) (normalize ms) -- sort??
 
 normalize :: [Int] -> [Double]
 normalize xs = if s == 0 then map fromIntegral xs else map ((/ fromIntegral s) . fromIntegral) xs
