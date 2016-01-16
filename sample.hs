@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
-module Sample (sample) where
+module Sample (sample, randomElement) where
 
 import Control.Monad.Primitive
 import Data.Foldable (toList)
@@ -18,3 +18,10 @@ sample ys size = go 0 (l - 1) (Seq.fromList ys) where
                           next = (Seq.update i toI . Seq.update j toJ) xs
                       go (n + 1) (i - 1) next g
 {-# INLINE sample #-}
+
+randomElement :: PrimMonad m => [a] -> Gen (PrimState m) -> m a
+randomElement [] _ = error "empty list"
+randomElement ys g = do
+    i <- uniformR (0, length ys - 1) g
+    return $ ys !! i
+{-# INLINE randomElement #-}

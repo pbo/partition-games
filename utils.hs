@@ -10,6 +10,12 @@ import qualified Data.ByteString.Lazy.Char8 as Char8
 import qualified Data.Csv as Csv
 import Statistics.Function (minMax)
 
+import Data.Time (getZonedTime, formatTime, defaultTimeLocale)
+import System.Directory (createDirectoryIfMissing, setCurrentDirectory)
+
+import System.IO
+
+
 {-------------------------------------------------------------------------------
   Histograms
 -------------------------------------------------------------------------------}
@@ -31,8 +37,25 @@ binnedHistogram bins xs = zip [lo,lo + (hi - lo)/(fromIntegral bins - 1)..hi] (V
   CSV
 -------------------------------------------------------------------------------}
 
-saveCSV :: Csv.ToRecord a => FilePath -> [Char8.ByteString] -> [a] -> IO ()
-saveCSV name h xs = Prelude.writeFile name $ Char8.unpack $ toCSV h xs
+saveCSV :: Csv.ToRecord a => FilePath -> [String] -> [a] -> IO ()
+saveCSV name h xs = Prelude.writeFile name $ Char8.unpack $ toCSV (map Char8.pack h) xs
   where toCSV hs xs' = Char8.append header (encode' xs')
           where header = Char8.append (Char8.intercalate "," hs) "\n"
                 encode' = Csv.encodeWith (Csv.defaultEncodeOptions { Csv.encUseCrLf = False })
+
+
+{-------------------------------------------------------------------------------
+  Dump to Directory
+-------------------------------------------------------------------------------}
+
+setExperimentDir :: String -> IO ()
+setExperimentDir experimentName = do
+    currentTime <- getZonedTime
+    let experimentDir = "output/" ++ experimentName ++ "-" ++ formatTime defaultTimeLocale "%Y-%m-%d_%H-%M-%S" currentTime
+    createDirectoryIfMissing True experimentDir
+    setCurrentDirectory experimentDir
+
+putStrLnBoth :: Handle -> String -> IO ()
+putStrLnBoth h str = do
+    putStrLn str
+    hPutStrLn h str
